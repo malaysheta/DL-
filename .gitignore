@@ -1,0 +1,30 @@
+# Ignore dataset folder
+
+data/
+
+# Ignore models (optional - if large files)
+
+models/
+
+# Ignore outputs (plots, logs, etc.)
+
+outputs/
+
+# Python cache
+
+**pycache**/
+*.pyc
+
+# Virtual environment
+
+venv/
+.env/
+
+# Jupyter Notebook checkpoints
+
+.ipynb_checkpoints/
+
+# OS files
+
+.DS_Store
+Thumbs.db
