@@ -1,7 +1,7 @@
 """
 evaluate.py
 ──────────────────────────────────────────────────────────────────────────────
-Evaluate all 3 trained models on the test set and compute:
+Evaluate the MobileNetV2 model on the test set and compute:
   • Accuracy
   • Precision (macro)
   • Recall    (macro)
@@ -32,7 +32,7 @@ from sklearn.metrics import (
     classification_report,
 )
 
-from models import SimpleCNN, get_resnet18, get_mobilenetv2
+from models import get_mobilenetv2
 from utils.dataset import build_dataloaders
 
 
@@ -137,8 +137,25 @@ def evaluate_model(model, model_name: str, weight_path: str,
     print(f"  Recall   : {metrics['recall']:.2f}%")
     print(f"  F1-Score : {metrics['f1']:.2f}%")
 
+    # ── Pretty per-class report WITHOUT support column ──────────────────────
     print(f"\n  Per-class Report:\n")
-    print(classification_report(labels, preds, target_names=class_names, zero_division=0))
+    report_dict = classification_report(
+        labels, preds, target_names=class_names,
+        zero_division=0, output_dict=True
+    )
+    col_w = max(len(n) for n in class_names + ["weighted avg"]) + 2
+    header = f"  {'':>{col_w}}  {'precision':>10}  {'recall':>10}  {'f1-score':>10}"
+    sep    = "  " + "-" * (col_w + 38)
+    print(header)
+    print(sep)
+    for name in class_names:
+        r = report_dict[name]
+        print(f"  {name:>{col_w}}  {r['precision']:>10.2f}  {r['recall']:>10.2f}  {r['f1-score']:>10.2f}")
+    print(sep)
+    for avg in ("macro avg", "weighted avg"):
+        r = report_dict[avg]
+        print(f"  {avg:>{col_w}}  {r['precision']:>10.2f}  {r['recall']:>10.2f}  {r['f1-score']:>10.2f}")
+    print()
 
     plot_confusion_matrix(labels, preds, class_names, model_name)
 
@@ -161,8 +178,6 @@ def main():
     )
 
     model_configs = [
-        ("CNN",         SimpleCNN(num_classes),       os.path.join(MODELS_DIR, "CNN_best.pth")),
-        ("ResNet18",    get_resnet18(num_classes),    os.path.join(MODELS_DIR, "ResNet18_best.pth")),
         ("MobileNetV2", get_mobilenetv2(num_classes), os.path.join(MODELS_DIR, "MobileNetV2_best.pth")),
     ]
 
@@ -173,8 +188,6 @@ def main():
             all_metrics[name] = metrics
 
     print("\n" + "="*60)
-    print("  Evaluation complete. Run:  python compare.py")
-    print("="*60)
 
 
 if __name__ == "__main__":
